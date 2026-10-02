@@ -1,0 +1,193 @@
+============================================================
+        HEALTHCONNECT DATA INTELLIGENCE
+        DAILY PIPELINE SCHEDULE SETUP
+============================================================
+
+PURPOSE
+-------
+The HealthConnect pipeline is scheduled to execute automatically
+every day at 10:00 PM IST.
+
+The Windows Task Scheduler executes the following BAT file:
+
+HealthConnect_Daily_Pipeline.bat
+
+
+------------------------------------------------------------
+1. BATCH FILE LOCATION
+------------------------------------------------------------
+
+D:\Oracle\IntelliBI (SQL)\Project\Main Project\HealthConnect\HealthConnect_Daily_Pipeline.bat
+
+
+------------------------------------------------------------
+2. BATCH FILE COMMAND
+------------------------------------------------------------
+
+The BAT file executes the HealthConnect master stored procedure
+using SQLCMD.
+
+Command:
+
+sqlcmd -S localhost\SQLEXPRESS -E -C -d dev_HealthConnect_refined -Q "EXEC dbo.usp_Master_Cleansed_To_Refined;" -b
+
+
+------------------------------------------------------------
+3. WINDOWS TASK SCHEDULER
+------------------------------------------------------------
+
+Task Name:
+
+HealthConnect Daily Pipeline
+
+Schedule:
+
+Daily at 10:00 PM
+
+
+------------------------------------------------------------
+4. PROGRAM CONFIGURATION
+------------------------------------------------------------
+
+Program/script:
+
+C:\Windows\System32\cmd.exe
+
+Arguments:
+
+/c "D:\Oracle\IntelliBI (SQL)\Project\Main Project\HealthConnect\HealthConnect_Daily_Pipeline.bat"
+
+Start in:
+
+D:\Oracle\IntelliBI (SQL)\Project\Main Project\HealthConnect
+
+
+------------------------------------------------------------
+5. HOW TO CREATE THE TASK
+------------------------------------------------------------
+
+1. Open Windows Task Scheduler.
+
+2. Select:
+   Create Task
+
+3. Enter the task name:
+
+   HealthConnect Daily Pipeline
+
+4. Create a Trigger:
+   - Begin the task: On a schedule
+   - Daily
+   - Time: 10:00 PM
+
+5. Create an Action:
+   - Action: Start a program
+   - Program/script:
+
+     C:\Windows\System32\cmd.exe
+
+   - Add arguments:
+
+     /c "D:\Oracle\IntelliBI (SQL)\Project\Main Project\HealthConnect\HealthConnect_Daily_Pipeline.bat"
+
+   - Start in:
+
+     D:\Oracle\IntelliBI (SQL)\Project\Main Project\HealthConnect
+
+
+------------------------------------------------------------
+6. TEST THE SCHEDULED TASK
+------------------------------------------------------------
+
+The task can be manually tested from an Administrator Command
+Prompt using:
+
+schtasks /run /tn "\HealthConnect Daily Pipeline"
+
+
+------------------------------------------------------------
+7. CHECK TASK STATUS
+------------------------------------------------------------
+
+To check the task status:
+
+schtasks /query /tn "\HealthConnect Daily Pipeline" /fo LIST /v
+
+
+------------------------------------------------------------
+8. ENABLE / DISABLE THE TASK
+------------------------------------------------------------
+
+To disable:
+
+schtasks /change /tn "\HealthConnect Daily Pipeline" /disable
+
+To enable:
+
+schtasks /change /tn "\HealthConnect Daily Pipeline" /enable
+
+
+------------------------------------------------------------
+9. PIPELINE EXECUTION
+------------------------------------------------------------
+
+When the scheduled task runs:
+
+Windows Task Scheduler
+        |
+        v
+HealthConnect_Daily_Pipeline.bat
+        |
+        v
+SQLCMD
+        |
+        v
+dbo.usp_Master_Cleansed_To_Refined
+        |
+        v
+CLEANSED -> REFINED
+        |
+        v
+Pipeline_Log
+
+
+------------------------------------------------------------
+10. PIPELINE LOG VERIFICATION
+------------------------------------------------------------
+
+After execution, verify the pipeline log in SQL Server:
+
+USE dev_HealthConnect_refined;
+GO
+
+SELECT TOP 20
+    Log_ID,
+    Run_ID,
+    Procedure_Name,
+    Start_Time,
+    End_Time,
+    Status,
+    Rows_Processed,
+    Error_Message
+FROM dbo.Pipeline_Log
+ORDER BY Log_ID DESC;
+
+
+Expected Status:
+
+SUCCESS
+
+
+------------------------------------------------------------
+NOTE
+------------------------------------------------------------
+
+SQL Server Express does not provide SQL Server Agent scheduling
+in this project environment.
+
+Therefore, Windows Task Scheduler is used to execute the
+HealthConnect BAT file daily at 10:00 PM IST.
+
+============================================================
+END
+============================================================
